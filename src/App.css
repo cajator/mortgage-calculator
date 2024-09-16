@@ -1,0 +1,343 @@
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #45b7e5;
+  --background-color: #1a1a1a;
+  --card-background: #2a2a2a;
+  --text-color: #ffffff;
+  --input-background: #333333;
+  --input-text: #ffffff;
+  --border-color: #444444;
+  --hover-color: #3a7bd5;
+  --button-color: #4a90e2;
+  --button-hover: #3a7bd5;
+  --border-radius: 4px;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  line-height: 1.4;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  margin: 0;
+  padding: 0;
+}
+
+.hypotecni-kalkulator {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 15px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+  margin-top: 0.7rem;
+}
+
+h3, h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.sekce-parametry, .info-klienta, .nastaveni-porovnani, .sekce-nastaveni-bank, .sekce-vysledku, .sekce-ulozeni-verze, .sekce-ulozene-verze {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  box-shadow: var(--box-shadow);
+}
+
+.parametry-mrizka {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+}
+
+.mrizka-vstupu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.skupina-vstupu {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.4rem;
+}
+
+label {
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+input[type="number"],
+input[type="text"],
+select {
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  background-color: var(--input-background);
+  color: var(--input-text);
+}
+
+.nastaveni-porovnani {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mrizka-nastaveni-bank {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+}
+
+.nastaveni-banky {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  background-color: var(--input-background);
+  border-radius: var(--border-radius);
+}
+
+.prepinac {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+}
+
+.prepinac input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.posuvnik {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 18px;
+}
+
+.posuvnik:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .posuvnik {
+  background-color: var(--secondary-color);
+}
+
+input:checked + .posuvnik:before {
+  transform: translateX(18px);
+}
+
+.nazev-banky {
+  flex-grow: 1;
+  font-size: 0.85rem;
+}
+
+.vstup-sazby-banky,
+.vstup-poplatku-banky {
+  width: 70px;
+  padding: 0.2rem;
+  font-size: 0.75rem;
+}
+
+.tlacitko-vypocet, .tlacitko-export, .tlacitko-ulozit {
+  background-color: var(--button-color);
+  color: var(--text-color);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 0.8rem;
+}
+
+.tlacitko-vypocet:hover, .tlacitko-export:hover, .tlacitko-ulozit:hover {
+  background-color: var(--button-hover);
+}
+
+.mrizka-vysledku {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+}
+
+.karta-vysledku {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.8rem;
+}
+
+.karta-vysledku p {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.karta-vysledku strong {
+  color: var(--primary-color);
+}
+
+.rozsirene-detaily {
+  margin-top: 0.8rem;
+}
+
+.posuvnik-mesicu {
+  width: 100%;
+  margin-bottom: 0.8rem;
+}
+
+.tabulka-detailu {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.8rem;
+  font-size: 0.85rem;
+}
+
+.tabulka-detailu th, .tabulka-detailu td {
+  border: 1px solid var(--border-color);
+  padding: 0.4rem;
+  text-align: left;
+}
+
+.tabulka-detailu th {
+  background-color: var(--card-background);
+}
+
+.graf-rozlozeni-splatek {
+  margin-top: 0.8rem;
+}
+
+/* Styles for Recharts */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--border-color);
+}
+
+.recharts-text {
+  fill: var(--text-color);
+  font-size: 0.75rem;
+}
+
+.recharts-default-tooltip {
+  background-color: var(--card-background) !important;
+  border-color: var(--border-color) !important;
+  font-size: 0.85rem;
+}
+
+.recharts-tooltip-label, .recharts-tooltip-item {
+  color: var(--text-color) !important;
+}
+
+.seznam-verzi {
+  list-style-type: none;
+  padding: 0;
+}
+
+.seznam-verzi li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.seznam-verzi li:last-child {
+  border-bottom: none;
+}
+
+.seznam-verzi button {
+  background-color: var(--button-color);
+  color: var(--text-color);
+  border: none;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.seznam-verzi button:hover {
+  background-color: var(--button-hover);
+}
+
+@media (max-width: 768px) {
+  .parametry-mrizka {
+    grid-template-columns: 1fr;
+  }
+  
+  .mrizka-vstupu, .mrizka-nastaveni-bank, .mrizka-vysledku {
+    grid-template-columns: 1fr;
+  }
+  
+  .nastaveni-banky {
+    flex-wrap: wrap;
+  }
+  
+  .nazev-banky {
+    width: 100%;
+    margin-bottom: 0.4rem;
+  }
+
+  .sekce-ulozeni-verze,
+  .sekce-ulozene-verze {
+    padding: 0.4rem;
+  }
+
+  .seznam-verzi li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .seznam-verzi button {
+    margin-top: 0.4rem;
+  }
+}
+.sekce-doplnujici-informace {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  box-shadow: var(--box-shadow);
+}
+
+.sekce-doplnujici-informace textarea {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  background-color: var(--input-background);
+  color: var(--input-text);
+  resize: vertical;
+}
