@@ -208,7 +208,7 @@ const HypotecniKalkulator = () => {
     doc.setFont('Roboto');
 
     // Přidání loga
-   const logoUrl = '/public/smaller-logo.png';
+   const logoUrl = '/images/smaller-logo.png';
    doc.addImage(img, 'PNG', 180, 10, 20, 20); // x, y, width, height
 
     // Přidání data a času
