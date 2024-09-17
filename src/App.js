@@ -65,7 +65,7 @@ const HypotecniKalkulator = () => {
   const [vyseUveru, nastavVysiUveru] = useState(2000000);
   const [dobaUveru, nastavDobuUveru] = useState(30);
   const [dobaFixace, nastavDobuFixace] = useState(5);
-  const [referencniSazba, nastavReferencniSazbu] = useState(6.29);
+  const [referencniSazba, nastavReferencniSazbu] = useState(4.7);
   const [typNemovitosti, nastavTypNemovitosti] = useState(typyNemovitosti[0]);
   const [ucelUveru, nastavUcelUveru] = useState(ucelyUveru[0]);
   const [jmenoKlienta, nastavJmenoKlienta] = useState("");
