@@ -65,11 +65,11 @@ const HypotecniKalkulator = () => {
   const [vyseUveru, nastavVysiUveru] = useState(2000000);
   const [dobaUveru, nastavDobuUveru] = useState(30);
   const [dobaFixace, nastavDobuFixace] = useState(5);
-  const [referencniSazba, nastavReferencniSazbu] = useState(6.29);
+  const [referencniSazba, nastavReferencniSazbu] = useState(4.7);
   const [typNemovitosti, nastavTypNemovitosti] = useState(typyNemovitosti[0]);
   const [ucelUveru, nastavUcelUveru] = useState(ucelyUveru[0]);
   const [jmenoKlienta, nastavJmenoKlienta] = useState("");
-  const [vek, nastavVek] = useState(30);
+  //const [vek, nastavVek] = useState(30);
   const [prijem, nastavPrijem] = useState(50000);
   const [banky, nastavBanky] = useState(pocatecniBanky);
   const [vysledky, nastavVysledky] = useState([]);
@@ -172,7 +172,7 @@ const HypotecniKalkulator = () => {
         typNemovitosti,
         ucelUveru,
         jmenoKlienta,
-        vek,
+        //vek,
         prijem,
         banky,
         porovnaniViceBanek,
@@ -192,7 +192,7 @@ const HypotecniKalkulator = () => {
     nastavTypNemovitosti(verze.parametry.typNemovitosti);
     nastavUcelUveru(verze.parametry.ucelUveru);
     nastavJmenoKlienta(verze.parametry.jmenoKlienta);
-    nastavVek(verze.parametry.vek);
+    //nastavVek(verze.parametry.vek);
     nastavPrijem(verze.parametry.prijem);
     nastavBanky(verze.parametry.banky);
     nastavPorovnaniViceBanek(verze.parametry.porovnaniViceBanek);
@@ -212,10 +212,10 @@ const HypotecniKalkulator = () => {
    doc.addImage(logoBase64, 'PNG', 180, 10, 20, 20); // x, y, width, height
 
     // Přidání data a času
-    const nyni = new Date();
-    const datumCas = `${nyni.toLocaleDateString()} ${nyni.toLocaleTimeString()}`;
-    doc.setFontSize(10);
-    doc.text(datumCas, 10, 10);
+    //const nyni = new Date();
+    //const datumCas = `${nyni.toLocaleDateString()} ${nyni.toLocaleTimeString()}`;
+    //doc.setFontSize(10);
+    //doc.text(datumCas, 10, 10);
 
     doc.setFontSize(16);
     doc.text("Výsledky hypoteční kalkulačky", 14, 30);
@@ -225,13 +225,13 @@ const HypotecniKalkulator = () => {
     const zakladniInfo = [
       `Klient: ${jmenoKlienta}`,
       `Datum: ${new Date().toLocaleDateString()}`,
+      `Účel úvěru: ${ucelUveru}`,
+      `Typ nemovitosti: ${typNemovitosti}`,
       `Výše úvěru: ${formatMena(vyseUveru)}`,
       `Doba splácení: ${dobaUveru} let`,
       `Fixace: ${dobaFixace} let`,
-      `Referenční sazba: ${referencniSazba}%`,
-      `Typ nemovitosti: ${typNemovitosti}`,
-      `Účel úvěru: ${ucelUveru}`,
-      `Věk: ${vek}`,
+      `Referenční sazba: ${referencniSazba}%`,       
+      //`Věk: ${vek}`,
       `Příjem: ${formatMena(prijem)}`,
     ];
 
@@ -391,15 +391,17 @@ const HypotecniKalkulator = () => {
                 onChange={(e) => nastavJmenoKlienta(e.target.value)} 
               />
             </div>
+            {/*
             <div className="skupina-vstupu">
               <label htmlFor="vek">Věk:</label>
-              <input 
+              <input
                 id="vek"
-                type="number" 
-                value={vek} 
-                onChange={(e) => nastavVek(Number(e.target.value))} 
+                type="number"
+                value={vek}
+                onChange={(e) => nastavVek(Number(e.target.value))}
               />
             </div>
+            */}
             <div className="skupina-vstupu">
               <label htmlFor="prijem">Čisté příjmy žadatelů (Kč/měsíc):</label>
               <input 
