@@ -225,12 +225,12 @@ const HypotecniKalkulator = () => {
     const zakladniInfo = [
       `Klient: ${jmenoKlienta}`,
       `Datum: ${new Date().toLocaleDateString()}`,
-      `Účel úvěru: ${ucelUveru}`,
-      `Typ nemovitosti: ${typNemovitosti}`,
       `Výše úvěru: ${formatMena(vyseUveru)}`,
       `Doba splácení: ${dobaUveru} let`,
       `Fixace: ${dobaFixace} let`,
       `Referenční sazba: ${referencniSazba}%`,
+      `Typ nemovitosti: ${typNemovitosti}`,
+      `Účel úvěru: ${ucelUveru}`,
       //`Věk: ${vek}`,
       `Příjem: ${formatMena(prijem)}`,
     ];
