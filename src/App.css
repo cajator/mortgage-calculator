@@ -29,11 +29,6 @@ body {
   padding: 15px;
 }
 
-header {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
 h1 {
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
@@ -50,7 +45,16 @@ h3, h4 {
   margin-bottom: 0.2rem;
 }
 
-.sekce-parametry, .info-klienta, .nastaveni-porovnani, .sekce-nastaveni-bank, .sekce-vysledku, .sekce-ulozeni-verze, .sekce-ulozene-verze {
+.sekce-vlastni-zdroje-zamer,
+.sekce-parametry, 
+.info-klienta, 
+.nastaveni-porovnani, 
+.sekce-nastaveni-bank, 
+.sekce-vysledku, 
+.sekce-ulozeni-verze, 
+.sekce-ulozene-verze, 
+.sekce-informace,
+.sekce-doplnujici-informace {
   background-color: var(--card-background);
   border-radius: var(--border-radius);
   padding: 0.8rem;
@@ -83,13 +87,19 @@ label {
 
 input[type="number"],
 input[type="text"],
-select {
+select,
+textarea {
   padding: 0.4rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 0.85rem;
   background-color: var(--input-background);
   color: var(--input-text);
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
 }
 
 .nastaveni-porovnani {
@@ -322,22 +332,4 @@ input:checked + .posuvnik:before {
   .seznam-verzi button {
     margin-top: 0.4rem;
   }
-}
-.sekce-doplnujici-informace {
-  background-color: var(--card-background);
-  border-radius: var(--border-radius);
-  padding: 0.8rem;
-  margin-bottom: 0.8rem;
-  box-shadow: var(--box-shadow);
-}
-
-.sekce-doplnujici-informace textarea {
-  width: 100%;
-  padding: 0.4rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 0.85rem;
-  background-color: var(--input-background);
-  color: var(--input-text);
-  resize: vertical;
 }
