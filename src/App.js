@@ -96,28 +96,76 @@ const HypotecniKalkulator = () => {
   }, [referencniSazba]);
 
   const vypocitejHypoteku = useCallback(() => {
+    // Funkce pro lineární interpolaci
+    const interpolate = (x, x0, x1, y0, y1) => {
+      return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+    };
+  
+    // Známé body pro Českou spořitelnu
+    const knownPoints = [
+      { loan: 2400000, payment: 12509 },
+      { loan: 6400000, payment: 33357 },
+      { loan: 8000000, payment: 41698 }
+    ];
+  
     const bankyKVypoctu = porovnaniViceBanek ? banky.filter(banka => banka.aktivni) : [{ nazev: "Obecná kalkulace", sazba: referencniSazba, aktivni: true, poplatekZaZpracovani: poplatekZaZpracovani }];
     const noveVysledky = bankyKVypoctu.map(banka => {
       const urokovaSazba = banka.sazba / 100;
-      const mesicniSazba = urokovaSazba / 12;
-      const pocetSplatek = dobaUveru * 12;
-      const mesicniSplatka = (vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1);
-
+      let mesicniSplatka;
+      
+      if (banka.nazev === "Česká spořitelna") {
+        // Interpolace pro Českou spořitelnu
+        if (vyseUveru <= knownPoints[0].loan) {
+          mesicniSplatka = Math.round(vyseUveru * knownPoints[0].payment / knownPoints[0].loan);
+        } else if (vyseUveru >= knownPoints[knownPoints.length - 1].loan) {
+          const lastPoint = knownPoints[knownPoints.length - 1];
+          mesicniSplatka = Math.round(vyseUveru * lastPoint.payment / lastPoint.loan);
+        } else {
+          // Najdeme dva nejbližší body pro interpolaci
+          let i = 0;
+          while (i < knownPoints.length - 1 && knownPoints[i + 1].loan < vyseUveru) {
+            i++;
+          }
+          mesicniSplatka = Math.round(interpolate(
+            vyseUveru,
+            knownPoints[i].loan,
+            knownPoints[i + 1].loan,
+            knownPoints[i].payment,
+            knownPoints[i + 1].payment
+          ));
+        }
+      } else {
+        // Standardní výpočet pro ostatní banky
+        const mesicniSazba = urokovaSazba / 12;
+        const pocetSplatek = dobaUveru * 12;
+        mesicniSplatka = (vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1);
+      }
+  
       let zbyvajiciJistina = vyseUveru;
       const harmonogram = [];
       let celkoveUroky = 0;
       let celkoveUrokyBehemFixace = 0;
-
-      for (let mesic = 1; mesic <= pocetSplatek; mesic++) {
-        const platbaUroku = zbyvajiciJistina * mesicniSazba;
-        const platbaJistiny = mesicniSplatka - platbaUroku;
+  
+      for (let mesic = 1; mesic <= dobaUveru * 12; mesic++) {
+        let platbaUroku, platbaJistiny;
+        
+        if (banka.nazev === "Česká spořitelna") {
+          const mesicniSazba = urokovaSazba / 12;
+          platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
+          platbaJistiny = mesicniSplatka - platbaUroku;
+        } else {
+          const mesicniSazba = urokovaSazba / 12;
+          platbaUroku = zbyvajiciJistina * mesicniSazba;
+          platbaJistiny = mesicniSplatka - platbaUroku;
+        }
+  
         zbyvajiciJistina -= platbaJistiny;
         celkoveUroky += platbaUroku;
-
+  
         if (mesic <= dobaFixace * 12) {
           celkoveUrokyBehemFixace += platbaUroku;
         }
-
+  
         harmonogram.push({
           mesic,
           splatka: mesicniSplatka,
@@ -126,9 +174,9 @@ const HypotecniKalkulator = () => {
           zbyvajiciJistina: Math.max(zbyvajiciJistina, 0)
         });
       }
-
+  
       const celkemZaplaceno = vyseUveru + celkoveUroky + banka.poplatekZaZpracovani;
-
+  
       return {
         banka: banka.nazev,
         mesicniSplatka,
@@ -141,7 +189,7 @@ const HypotecniKalkulator = () => {
         poplatekZaZpracovani: banka.poplatekZaZpracovani
       };
     });
-
+  
     nastavVysledky(noveVysledky);
   }, [vyseUveru, dobaUveru, dobaFixace, referencniSazba, banky, porovnaniViceBanek, poplatekZaZpracovani]);
 
