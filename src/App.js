@@ -63,9 +63,9 @@ const GrafRozlozeniSplatek = React.forwardRef(({ harmonogram, nastavAktualniMesi
 });
 
 const HypotecniKalkulator = () => {
-  const [celkovyZamer, nastavCelkovyZamer] = useState(1000000);
-  const [vlastniZdroje, nastavVlastniZdroje] = useState(200000);
-  const [vyseUveru, nastavVysiUveru] = useState(800000);
+  const [celkovyZamer, nastavCelkovyZamer] = useState(3000000);
+  const [vlastniZdroje, nastavVlastniZdroje] = useState(600000);
+  const [vyseUveru, nastavVysiUveru] = useState(2400000);
   const [dobaUveru, nastavDobuUveru] = useState(30);
   const [dobaFixace, nastavDobuFixace] = useState(5);
   const [referencniSazba, nastavReferencniSazbu] = useState(4.7);

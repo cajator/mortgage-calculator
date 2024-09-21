@@ -1,12 +1,13 @@
 :root {
   --primary-color: #4a90e2;
   --secondary-color: #45b7e5;
-  --background-color: #1a1a1a;
-  --card-background: #2a2a2a;
+  --background-color: #323644;
+  --card-background: #3a3f4f;
+  --card-background-dark: #2f3441;  /* Nová tmavší barva pro hlavní sekce */
   --text-color: #ffffff;
-  --input-background: #333333;
+  --input-background: #454b5e;
   --input-text: #ffffff;
-  --border-color: #444444;
+  --border-color: #5a6070;
   --hover-color: #3a7bd5;
   --button-color: #4a90e2;
   --button-hover: #3a7bd5;
@@ -18,9 +19,10 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   line-height: 1.4;
   color: var(--text-color);
-  background-color: var(--background-color);
+  background: radial-gradient(circle, #52586c 0%, #323644 100%);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
 .hypotecni-kalkulator {
@@ -45,7 +47,7 @@ h3, h4 {
   margin-bottom: 0.2rem;
 }
 
-.sekce-vlastni-zdroje-zamer,
+.sekce-zakladni-udaje,
 .sekce-parametry, 
 .info-klienta, 
 .nastaveni-porovnani, 
@@ -57,42 +59,63 @@ h3, h4 {
 .sekce-doplnujici-informace {
   background-color: var(--card-background);
   border-radius: var(--border-radius);
-  padding: 0.8rem;
-  margin-bottom: 0.8rem;
+  padding: 1.5rem;  /* Zvětšené odsazení */
+  margin-bottom: 1.5rem;  /* Větší mezera mezi sekcemi */
   box-shadow: var(--box-shadow);
+}
+
+/* Tmavší pozadí pro hlavní sekce */
+.sekce-zakladni-udaje,
+.sekce-parametry,
+.info-klienta {
+  background-color: var(--card-background-dark);
+}
+
+/* Přidáme jemný okraj pro lepší oddělení sekcí */
+.sekce-zakladni-udaje,
+.sekce-parametry, 
+.info-klienta, 
+.nastaveni-porovnani, 
+.sekce-nastaveni-bank, 
+.sekce-vysledku, 
+.sekce-ulozeni-verze, 
+.sekce-ulozene-verze, 
+.sekce-informace,
+.sekce-doplnujici-informace {
+  border: 1px solid var(--border-color);
 }
 
 .parametry-mrizka {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.8rem;
+  gap: 1rem;  /* Zvětšená mezera */
 }
 
 .mrizka-vstupu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;  /* Zvětšená mezera */
 }
 
 .skupina-vstupu {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.8rem;  /* Trochu větší mezera */
 }
 
 label {
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.9rem;  /* Trochu větší písmo */
+  margin-bottom: 0.3rem;
 }
 
 input[type="number"],
 input[type="text"],
 select,
 textarea {
-  padding: 0.4rem;
+  padding: 0.5rem;  /* Trochu větší padding */
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  font-size: 0.85rem;
+  font-size: 0.9rem;  /* Trochu větší písmo */
   background-color: var(--input-background);
   color: var(--input-text);
 }
