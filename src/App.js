@@ -110,7 +110,8 @@ const HypotecniKalkulator = () => {
   
     const bankyKVypoctu = porovnaniViceBanek ? banky.filter(banka => banka.aktivni) : [{ nazev: "Obecná kalkulace", sazba: referencniSazba, aktivni: true, poplatekZaZpracovani: poplatekZaZpracovani }];
     const noveVysledky = bankyKVypoctu.map(banka => {
-      const urokovaSazba = banka.sazba / 100;
+      // Zaokrouhlíme úrokovou sazbu na dvě desetinná místa
+      const urokovaSazba = Math.round(banka.sazba * 100) / 10000;
       let mesicniSplatka;
       
       if (banka.nazev === "Česká spořitelna") {
@@ -138,7 +139,7 @@ const HypotecniKalkulator = () => {
         // Standardní výpočet pro ostatní banky
         const mesicniSazba = urokovaSazba / 12;
         const pocetSplatek = dobaUveru * 12;
-        mesicniSplatka = (vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1);
+        mesicniSplatka = Math.round((vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1));
       }
   
       let zbyvajiciJistina = vyseUveru;
@@ -149,15 +150,9 @@ const HypotecniKalkulator = () => {
       for (let mesic = 1; mesic <= dobaUveru * 12; mesic++) {
         let platbaUroku, platbaJistiny;
         
-        if (banka.nazev === "Česká spořitelna") {
-          const mesicniSazba = urokovaSazba / 12;
-          platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
-          platbaJistiny = mesicniSplatka - platbaUroku;
-        } else {
-          const mesicniSazba = urokovaSazba / 12;
-          platbaUroku = zbyvajiciJistina * mesicniSazba;
-          platbaJistiny = mesicniSplatka - platbaUroku;
-        }
+        const mesicniSazba = urokovaSazba / 12;
+        platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
+        platbaJistiny = mesicniSplatka - platbaUroku;
   
         zbyvajiciJistina -= platbaJistiny;
         celkoveUroky += platbaUroku;
