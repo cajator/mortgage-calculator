@@ -216,7 +216,7 @@ const HypotecniKalkulator = () => {
     doc.setFont('Roboto');
    
     // Zmenšené logo
-    doc.addImage(logo, 'PNG', 150, 10, 25, 25);
+    doc.addImage(logo, 'PNG', 170, 10, 25, 25);
 
     doc.setFontSize(16);
     doc.text("Výsledky hypoteční kalkulačky", 14, 30);
