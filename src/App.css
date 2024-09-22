@@ -27,8 +27,12 @@ body {
 
 .hypotecni-kalkulator {
   max-width: 1100px;
+  width: 100%;  /* Zajistí, že kalkulačka vyplní celou šířku kontejneru */
+  height: 800px;  /* Explicitní výška - můžete upravit podle potřeby */
   margin: 0 auto;
   padding: 15px;
+  overflow-y: auto;  /* Přidá posuvník, pokud obsah přesáhne výšku */
+  box-sizing: border-box;  /* Zajistí, že padding je zahrnut v celkové výšce */
 }
 
 h1 {
