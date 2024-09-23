@@ -267,16 +267,17 @@ const HypotecniKalkulator = () => {
     doc.setFontSize(10);
 
     const zakladniInfo = [
+      `Klient: ${jmenoKlienta}`,
+      `Účel úvěru: ${ucelUveru}`,
+      `Typ nemovitosti: ${typNemovitosti}`,
       `Celkový záměr: ${formatMena(celkovyZamer)}`,
       `Vlastní zdroje: ${formatMena(vlastniZdroje)}`,
       `Výše úvěru: ${formatMena(vyseUveru)}`,
-      `Klient: ${jmenoKlienta}`,
-      `Datum: ${new Date().toLocaleDateString()}`,
-      `Účel úvěru: ${ucelUveru}`,
-      `Typ nemovitosti: ${typNemovitosti}`,
       `Doba splácení: ${dobaUveru} let`,
       `Fixace: ${dobaFixace} let`,
-      `Referenční sazba: ${referencniSazba}%`,       
+      '', // Prázdný řádek
+      `Datum: ${new Date().toLocaleDateString()}`,
+      `Referenční sazba: ${referencniSazba}%`,      
       `Příjem: ${formatMena(prijem)}`,
     ];
   
