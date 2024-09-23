@@ -262,7 +262,7 @@ const HypotecniKalkulator = () => {
     doc.addImage(logo, 'PNG', 170, 10, 25, 25);
 
     doc.setFontSize(16);
-    doc.text("Výsledky hypoteční kalkulačky", 14, 30);
+    doc.text("Výsledky hypoteční kalkulačky", 14, 20);
 
     doc.setFontSize(10);
 
@@ -281,7 +281,7 @@ const HypotecniKalkulator = () => {
       `Příjem: ${formatMena(prijem)}`,
     ];
   
-    let yPozice = 40;
+    let yPozice = 30;
     zakladniInfo.forEach(info => {
       doc.text(info, 14, yPozice);
       yPozice += 6;
