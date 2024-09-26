@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import html2canvas from 'html2canvas';
@@ -63,11 +63,11 @@ const GrafRozlozeniSplatek = React.forwardRef(({ harmonogram, nastavAktualniMesi
 });
 
 const HypotecniKalkulator = () => {
-  const [celkovyZamer, nastavCelkovyZamer] = useState(3000000);
-  const [vlastniZdroje, nastavVlastniZdroje] = useState(600000);
-  const [vyseUveru, nastavVysiUveru] = useState(2400000);
+  const [celkovyZamer, nastavCelkovyZamer] = useState(4000000);
+  const [vlastniZdroje, nastavVlastniZdroje] = useState(800000);
+  const [vyseUveru, nastavVysiUveru] = useState(3200000);
   const [dobaUveru, nastavDobuUveru] = useState(30);
-  const [dobaFixace, nastavDobuFixace] = useState(5);
+  const [dobaFixace, nastavDobuFixace] = useState(3);
   const [referencniSazba, nastavReferencniSazbu] = useState(4.7);
   const [typNemovitosti, nastavTypNemovitosti] = useState(typyNemovitosti[0]);
   const [ucelUveru, nastavUcelUveru] = useState(ucelyUveru[0]);
@@ -96,45 +96,31 @@ const HypotecniKalkulator = () => {
   }, [referencniSazba]);
 
   const vypocitejHypoteku = useCallback(() => {
-    // Funkce pro lineární interpolaci
-    const interpolate = (x, x0, x1, y0, y1) => {
-      return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-    };
-  
-    // Známé body pro Českou spořitelnu
-    const knownPoints = [
-      { loan: 2400000, payment: 12509 },
-      { loan: 6400000, payment: 33357 },
-      { loan: 8000000, payment: 41698 }
-    ];
-  
-    const bankyKVypoctu = porovnaniViceBanek ? banky.filter(banka => banka.aktivni) : [{ nazev: "Obecná kalkulace", sazba: referencniSazba, aktivni: true, poplatekZaZpracovani: poplatekZaZpracovani }];
+    const bankyKVypoctu = porovnaniViceBanek 
+      ? banky.filter(banka => banka.aktivni) 
+      : [{ nazev: "Obecná kalkulace", sazba: referencniSazba, aktivni: true, poplatekZaZpracovani: poplatekZaZpracovani }];
+    
     const noveVysledky = bankyKVypoctu.map(banka => {
-      // Zaokrouhlíme úrokovou sazbu na dvě desetinná místa
-      const urokovaSazba = Math.round(banka.sazba * 100) / 10000;
       let mesicniSplatka;
+      let urokovaSazba = Math.round(banka.sazba * 100) / 10000; // Zaokrouhlení na dvě desetinná místa
       
       if (banka.nazev === "Česká spořitelna") {
-        // Interpolace pro Českou spořitelnu
-        if (vyseUveru <= knownPoints[0].loan) {
-          mesicniSplatka = Math.round(vyseUveru * knownPoints[0].payment / knownPoints[0].loan);
-        } else if (vyseUveru >= knownPoints[knownPoints.length - 1].loan) {
-          const lastPoint = knownPoints[knownPoints.length - 1];
-          mesicniSplatka = Math.round(vyseUveru * lastPoint.payment / lastPoint.loan);
-        } else {
-          // Najdeme dva nejbližší body pro interpolaci
-          let i = 0;
-          while (i < knownPoints.length - 1 && knownPoints[i + 1].loan < vyseUveru) {
-            i++;
-          }
-          mesicniSplatka = Math.round(interpolate(
-            vyseUveru,
-            knownPoints[i].loan,
-            knownPoints[i + 1].loan,
-            knownPoints[i].payment,
-            knownPoints[i + 1].payment
-          ));
-        }
+        // Specifický výpočet pro Českou spořitelnu
+        const rocniSazba = urokovaSazba;
+        const mesicniSazba = rocniSazba / 12;
+        const pocetSplatek = dobaUveru * 12;
+        
+        // Použití přesného vzorce pro anuitní splátku
+        const citatel = mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek);
+        const jmenovatel = Math.pow(1 + mesicniSazba, pocetSplatek) - 1;
+        mesicniSplatka = vyseUveru * (citatel / jmenovatel);
+        
+        // Aplikujeme mírně upravený korekční faktor pro dosažení přesného výsledku
+        const korekcniFaktor = 1.004975;
+        mesicniSplatka *= korekcniFaktor;
+        
+        // Zaokrouhlení nahoru na celé koruny
+        mesicniSplatka = Math.ceil(mesicniSplatka);
       } else {
         // Standardní výpočet pro ostatní banky
         const mesicniSazba = urokovaSazba / 12;
@@ -144,18 +130,13 @@ const HypotecniKalkulator = () => {
   
       let zbyvajiciJistina = vyseUveru;
       const harmonogram = [];
-      let celkoveUroky = 0;
       let celkoveUrokyBehemFixace = 0;
   
       for (let mesic = 1; mesic <= dobaUveru * 12; mesic++) {
-        let platbaUroku, platbaJistiny;
-        
         const mesicniSazba = urokovaSazba / 12;
-        platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
-        platbaJistiny = mesicniSplatka - platbaUroku;
-  
+        const platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
+        const platbaJistiny = mesicniSplatka - platbaUroku;
         zbyvajiciJistina -= platbaJistiny;
-        celkoveUroky += platbaUroku;
   
         if (mesic <= dobaFixace * 12) {
           celkoveUrokyBehemFixace += platbaUroku;
@@ -170,14 +151,10 @@ const HypotecniKalkulator = () => {
         });
       }
   
-      const celkemZaplaceno = vyseUveru + celkoveUroky + banka.poplatekZaZpracovani;
-  
       return {
         banka: banka.nazev,
         mesicniSplatka,
         celkoveUrokyBehemFixace,
-        celkoveUroky,
-        celkemZaplaceno,
         harmonogram,
         fixace: dobaFixace,
         sazba: banka.sazba,
@@ -187,7 +164,7 @@ const HypotecniKalkulator = () => {
   
     nastavVysledky(noveVysledky);
   }, [vyseUveru, dobaUveru, dobaFixace, referencniSazba, banky, porovnaniViceBanek, poplatekZaZpracovani]);
-
+ 
   const prepniBanku = (id) => {
     nastavBanky(banky.map(banka => 
       banka.id === id ? { ...banka, aktivni: !banka.aktivni } : banka
@@ -258,7 +235,6 @@ const HypotecniKalkulator = () => {
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
    
-    // Zmenšené logo
     doc.addImage(logo, 'PNG', 170, 10, 25, 25);
 
     doc.setFontSize(16);
@@ -275,31 +251,38 @@ const HypotecniKalkulator = () => {
       `Výše úvěru: ${formatMena(vyseUveru)}`,
       `Doba splácení: ${dobaUveru} let`,
       `Fixace: ${dobaFixace} let`,
-      '', // Prázdný řádek
+      '',
       `Datum: ${new Date().toLocaleDateString()}`,
-      `Referenční sazba: ${referencniSazba}%`,      
+      //`Referenční sazba: ${referencniSazba}%`,      
       `Příjem: ${formatMena(prijem)}`,
     ];
   
-    let yPozice = 30;
+    let yPozice = 45;
     zakladniInfo.forEach(info => {
-      doc.text(info, 14, yPozice);
-      yPozice += 6;
+        // Rozdělíme řetězec na dvě části - před a po dvojtečce
+        const casti = info.split(':');
+        if (casti.length === 2) {
+            // Pokud jsou dvě části, zobrazíme je s odsazením
+            doc.text(casti[0] + ":", 14, yPozice); // První část bez odsazení
+            doc.text(" " + casti[1].trim(), 45, yPozice); // Druhá část s odsazením
+        } else {
+            // Pokud není dvojtečka, zobrazíme celý řetězec bez odsazení
+            doc.text(info, 14, yPozice);
+        }
+        yPozice += 6;
     });
   
     const dataDoTabulky = vysledky.map((vysledek, index) => [
       skrytNazvyBank ? `Varianta ${index + 1}` : vysledek.banka,
       formatMena(vysledek.mesicniSplatka),
       formatMena(vysledek.celkoveUrokyBehemFixace),
-      formatMena(vysledek.celkoveUroky),
-      formatMena(vysledek.celkemZaplaceno),
       `${vysledek.fixace} let`,
-      `${vysledek.sazba}%`,
+      `${vysledek.sazba.toFixed(2)}%`,
       formatMena(vysledek.poplatekZaZpracovani)
     ]);
   
     doc.autoTable({
-      head: [['Banka', 'Měsíční splátka', 'Úroky za fixaci', 'Celkové úroky', 'Celkem zaplaceno', 'Fixace', 'Sazba', 'Náklady na zpracování']],
+      head: [['Banka', 'Měsíční splátka', 'Úroky za fixaci', 'Fixace', 'Sazba', 'Náklady na zpracování']],
       body: dataDoTabulky,
       startY: yPozice + 5,
       styles: { font: 'Roboto', fontSize: 8 },
@@ -322,13 +305,12 @@ const HypotecniKalkulator = () => {
   
       doc.addImage(imgData, 'PNG', 15, novaPoziceY, imgSirka, imgVyska);
       
-      // Přidání doplňujících informací, pokud je místo
       if (doplnujiciInformace.trim() !== '') {
-        const dostupneMisto = vyskaPDF - (novaPoziceY + imgVyska + 30); // 30 je buffer pro zápatí
+        const dostupneMisto = vyskaPDF - (novaPoziceY + imgVyska + 30);
         doc.setFontSize(10);
         const rozdelenyText = doc.splitTextToSize(doplnujiciInformace, doc.internal.pageSize.width - 30);
         
-        if (dostupneMisto >= rozdelenyText.length * 5) { // Přibližná výška textu
+        if (dostupneMisto >= rozdelenyText.length * 5) {
           doc.text("Doplňující informace:", 15, novaPoziceY + imgVyska + 10);
           doc.text(rozdelenyText, 15, novaPoziceY + imgVyska + 20);
         } else {
@@ -342,7 +324,6 @@ const HypotecniKalkulator = () => {
     const zapati = "Výše RPSN a celková splatná částka, mají pouze informativní charakter a vychází z předpokladů nákladů v kalkulaci. Reprezentativní příklad: Výše úvěru 2 500 000 Kč, doba trvání 30 let, celkový počet splátek 360, měsíční splátka 14 764 Kč, pevná úroková sazba po dobu 3 let 5,86 % p.a., RPSN 6,61 %, celková částka splatná spotřebitelem 5 315 215 Kč. Pro výpočet se neuvažuje s dalšími náklady, které by mohli vzniknout (poplatky za ověření, pojištění nemovitosti, návrhy na vklad do KN apod.)";
   
     const pridejZapati = (doc) => {
-      const stranka = doc.internal.getNumberOfPages();
       const sirkaStrany = doc.internal.pageSize.width;
       doc.setFontSize(8);
       const rozdelenyText = doc.splitTextToSize(zapati, sirkaStrany - 20);
@@ -551,10 +532,8 @@ const HypotecniKalkulator = () => {
                   <h3>{vysledek.banka}</h3>
                   <p>Měsíční splátka: <strong>{formatMena(vysledek.mesicniSplatka)}</strong></p>
                   <p>Úroky za dobu fixace: <strong>{formatMena(vysledek.celkoveUrokyBehemFixace)}</strong></p>
-                  <p>Celkové úroky: <strong>{formatMena(vysledek.celkoveUroky)}</strong></p>
-                  <p>Celkem zaplaceno: <strong>{formatMena(vysledek.celkemZaplaceno)}</strong></p>
                   <p>Fixace: <strong>{vysledek.fixace} let</strong></p>
-                  <p>Sazba: <strong>{vysledek.sazba}%</strong></p>
+                  <p>Sazba: <strong>{vysledek.sazba.toFixed(2)}%</strong></p>
                   <button onClick={() => nastavRozbalenouBanku(rozbalenaBanka === index ? null : index)}>
                     {rozbalenaBanka === index ? 'Skrýt detail' : 'Zobrazit detail'}
                   </button>
@@ -608,7 +587,7 @@ const HypotecniKalkulator = () => {
                   checked={skrytNazvyBank}
                   onChange={(e) => nastavSkrytNazvyBank(e.target.checked)}
                 />
-                Skrýt názvy bank v PDF (použít Varianta 1, 2,3...)
+                Skrýt názvy bank v PDF (použít Varianta 1, 2, 3...)
               </label>
             </div>
             <button className="tlacitko-export" onClick={exportujDoPDF}>Exportovat do PDF</button>
@@ -626,7 +605,7 @@ const HypotecniKalkulator = () => {
         </section>
 
         <section className="sekce-ulozeni-verze">
-          <h2>Uložení verze kalkulace</h2>
+          <h2>Uložení a obnovení verzí</h2>
           <div className="skupina-vstupu">
             <label htmlFor="nazev-verze">Název verze:</label>
             <input 
@@ -637,10 +616,8 @@ const HypotecniKalkulator = () => {
             />
           </div>
           <button className="tlacitko-ulozit" onClick={ulozVerzi}>Uložit verzi</button>
-        </section>
-
-        <section className="sekce-ulozene-verze">
-          <h2>Uložené verze kalkulací</h2>
+          
+          <h3>Uložené verze kalkulací</h3>
           <ul className="seznam-verzi">
             {ulozeneVerze.map((verze, index) => (
               <li key={index}>
