@@ -61,7 +61,6 @@ const GrafRozlozeniSplatek = React.forwardRef(({ harmonogram, nastavAktualniMesi
     </div>
   );
 });
-
 const HypotecniKalkulator = () => {
   const [celkovyZamer, nastavCelkovyZamer] = useState(4000000);
   const [vlastniZdroje, nastavVlastniZdroje] = useState(800000);
@@ -102,46 +101,41 @@ const HypotecniKalkulator = () => {
     
     const noveVysledky = bankyKVypoctu.map(banka => {
       let mesicniSplatka;
-      let urokovaSazba = Math.round(banka.sazba * 100) / 10000; // Zaokrouhlení na dvě desetinná místa
+      let urokovaSazba = Math.round(banka.sazba * 100) / 10000;
       
       if (banka.nazev === "Česká spořitelna") {
-        // Specifický výpočet pro Českou spořitelnu
         const rocniSazba = urokovaSazba;
         const mesicniSazba = rocniSazba / 12;
         const pocetSplatek = dobaUveru * 12;
         
-        // Použití přesného vzorce pro anuitní splátku
         const citatel = mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek);
         const jmenovatel = Math.pow(1 + mesicniSazba, pocetSplatek) - 1;
         mesicniSplatka = vyseUveru * (citatel / jmenovatel);
         
-        // Aplikujeme mírně upravený korekční faktor pro dosažení přesného výsledku
         const korekcniFaktor = 1.004975;
         mesicniSplatka *= korekcniFaktor;
         
-        // Zaokrouhlení nahoru na celé koruny
         mesicniSplatka = Math.ceil(mesicniSplatka);
       } else {
-        // Standardní výpočet pro ostatní banky
         const mesicniSazba = urokovaSazba / 12;
         const pocetSplatek = dobaUveru * 12;
         mesicniSplatka = Math.round((vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1));
       }
-  
+
       let zbyvajiciJistina = vyseUveru;
       const harmonogram = [];
       let celkoveUrokyBehemFixace = 0;
-  
+
       for (let mesic = 1; mesic <= dobaUveru * 12; mesic++) {
         const mesicniSazba = urokovaSazba / 12;
         const platbaUroku = Math.round(zbyvajiciJistina * mesicniSazba);
         const platbaJistiny = mesicniSplatka - platbaUroku;
         zbyvajiciJistina -= platbaJistiny;
-  
+
         if (mesic <= dobaFixace * 12) {
           celkoveUrokyBehemFixace += platbaUroku;
         }
-  
+
         harmonogram.push({
           mesic,
           splatka: mesicniSplatka,
@@ -150,7 +144,7 @@ const HypotecniKalkulator = () => {
           zbyvajiciJistina: Math.max(zbyvajiciJistina, 0)
         });
       }
-  
+
       return {
         banka: banka.nazev,
         mesicniSplatka,
@@ -161,10 +155,9 @@ const HypotecniKalkulator = () => {
         poplatekZaZpracovani: banka.poplatekZaZpracovani
       };
     });
-  
+
     nastavVysledky(noveVysledky);
   }, [vyseUveru, dobaUveru, dobaFixace, referencniSazba, banky, porovnaniViceBanek, poplatekZaZpracovani]);
- 
   const prepniBanku = (id) => {
     nastavBanky(banky.map(banka => 
       banka.id === id ? { ...banka, aktivni: !banka.aktivni } : banka
@@ -253,20 +246,16 @@ const HypotecniKalkulator = () => {
       `Fixace: ${dobaFixace} let`,
       '',
       `Datum: ${new Date().toLocaleDateString()}`,
-      //`Referenční sazba: ${referencniSazba}%`,      
       `Příjem: ${formatMena(prijem)}`,
     ];
   
     let yPozice = 45;
     zakladniInfo.forEach(info => {
-        // Rozdělíme řetězec na dvě části - před a po dvojtečce
         const casti = info.split(':');
         if (casti.length === 2) {
-            // Pokud jsou dvě části, zobrazíme je s odsazením
-            doc.text(casti[0] + ":", 14, yPozice); // První část bez odsazení
-            doc.text(" " + casti[1].trim(), 45, yPozice); // Druhá část s odsazením
+            doc.text(casti[0] + ":", 14, yPozice);
+            doc.text(" " + casti[1].trim(), 45, yPozice);
         } else {
-            // Pokud není dvojtečka, zobrazíme celý řetězec bez odsazení
             doc.text(info, 14, yPozice);
         }
         yPozice += 6;
@@ -288,15 +277,17 @@ const HypotecniKalkulator = () => {
       styles: { font: 'Roboto', fontSize: 8 },
       headStyles: { fillColor: [74, 144, 226] },
     });
-  
-    if (refGrafu.current && vysledky.length > 0) {
+
+    let novaPoziceY = doc.lastAutoTable.finalY + 10;
+    
+    // Přidání grafu (volitelné)
+    if (refGrafu.current && vysledky.length > 0 && !document.getElementById('skip-graph').checked) {
       const platno = await html2canvas(refGrafu.current);
       const imgData = platno.toDataURL('image/png');
       const imgSirka = 180;
       const imgVyska = (platno.height * imgSirka) / platno.width;
   
       const vyskaPDF = doc.internal.pageSize.height;
-      let novaPoziceY = doc.lastAutoTable.finalY + 10;
   
       if (novaPoziceY + imgVyska > vyskaPDF - 20) {
         doc.addPage();
@@ -304,21 +295,22 @@ const HypotecniKalkulator = () => {
       }
   
       doc.addImage(imgData, 'PNG', 15, novaPoziceY, imgSirka, imgVyska);
+      novaPoziceY += imgVyska + 10;
+    }
       
-      if (doplnujiciInformace.trim() !== '') {
-        const dostupneMisto = vyskaPDF - (novaPoziceY + imgVyska + 30);
-        doc.setFontSize(10);
-        const rozdelenyText = doc.splitTextToSize(doplnujiciInformace, doc.internal.pageSize.width - 30);
-        
-        if (dostupneMisto >= rozdelenyText.length * 5) {
-          doc.text("Doplňující informace:", 15, novaPoziceY + imgVyska + 10);
-          doc.text(rozdelenyText, 15, novaPoziceY + imgVyska + 20);
-        } else {
-          doc.addPage();
-          doc.text("Doplňující informace:", 15, 20);
-          doc.text(rozdelenyText, 15, 30);
-        }
+    // Přidání doplňujících informací
+    if (doplnujiciInformace.trim() !== '') {
+      const vyskaPDF = doc.internal.pageSize.height;
+      doc.setFontSize(10);
+      const rozdelenyText = doc.splitTextToSize(doplnujiciInformace, doc.internal.pageSize.width - 30);
+      
+      if (novaPoziceY + (rozdelenyText.length * 5) + 30 > vyskaPDF) {
+        doc.addPage();
+        novaPoziceY = 20;
       }
+      
+      doc.text("Doplňující informace:", 15, novaPoziceY + 10);
+      doc.text(rozdelenyText, 15, novaPoziceY + 20);
     }
   
     const zapati = "Výše RPSN a celková splatná částka, mají pouze informativní charakter a vychází z předpokladů nákladů v kalkulaci. Reprezentativní příklad: Výše úvěru 2 500 000 Kč, doba trvání 30 let, celkový počet splátek 360, měsíční splátka 14 764 Kč, pevná úroková sazba po dobu 3 let 5,86 % p.a., RPSN 6,61 %, celková částka splatná spotřebitelem 5 315 215 Kč. Pro výpočet se neuvažuje s dalšími náklady, které by mohli vzniknout (poplatky za ověření, pojištění nemovitosti, návrhy na vklad do KN apod.)";
@@ -338,7 +330,6 @@ const HypotecniKalkulator = () => {
   
     doc.save("hypotecni-kalkulacka-vysledky.pdf");
   };
-
   return (
     <div className="hypotecni-kalkulator">
       <main>
@@ -480,7 +471,6 @@ const HypotecniKalkulator = () => {
             </div>
           )}
         </section>
-
         {porovnaniViceBanek && (
           <section className="sekce-nastaveni-bank">
             <h2>Nastavení bank</h2>
@@ -588,6 +578,14 @@ const HypotecniKalkulator = () => {
                   onChange={(e) => nastavSkrytNazvyBank(e.target.checked)}
                 />
                 Skrýt názvy bank v PDF (použít Varianta 1, 2, 3...)
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  id="skip-graph"
+                  defaultChecked={false}
+                />
+                Netisknout graf do PDF
               </label>
             </div>
             <button className="tlacitko-export" onClick={exportujDoPDF}>Exportovat do PDF</button>
