@@ -110,8 +110,10 @@ label {
   margin-bottom: 0.3rem;
 }
 
+/* Oprava formulářových prvků pro konzistentní tmavý režim */
 input[type="number"],
 input[type="text"],
+input[type="email"],
 select,
 textarea {
   padding: 0.5rem;  /* Trochu větší padding */
@@ -120,6 +122,15 @@ textarea {
   font-size: 0.9rem;  /* Trochu větší písmo */
   background-color: var(--input-background);
   color: var(--input-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Oprava specificky pro email input */
+input[type="email"] {
+  background-color: var(--input-background);
+  color: var(--input-text);
+  border-color: var(--border-color);
 }
 
 textarea {
@@ -133,26 +144,45 @@ textarea {
   gap: 0.8rem;
 }
 
+/* Nový layout pro sekci nastavení bank */
+.sekce-nastaveni-bank h2 {
+  margin-bottom: 1rem;
+}
+
+/* Nový layout pro mřížku bank */
 .mrizka-nastaveni-bank {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.8rem;
 }
 
+/* Nový layout pro jednotlivé banky */
 .nastaveni-banky {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem;
-  background-color: var(--input-background);
+  flex-direction: column;
+  background-color: var(--card-background-dark);
   border-radius: var(--border-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
+/* Horní část s názvem banky a přepínačem */
+.banka-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Styl pro přepínač */
 .prepinac {
   position: relative;
   display: inline-block;
   width: 36px;
   height: 18px;
+  margin-right: 10px;
+  flex-shrink: 0;
 }
 
 .prepinac input {
@@ -193,16 +223,58 @@ input:checked + .posuvnik:before {
   transform: translateX(18px);
 }
 
+/* Styl pro název banky */
 .nazev-banky {
   flex-grow: 1;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 10px;
+}
+
+/* Tělo karty banky s inputy */
+.banka-body {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Styl pro inputy */
+.banka-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.banka-input-group label {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  color: #ccc;
+}
+
+.banka-input-group input {
+  padding: 6px;
+  text-align: center;
   font-size: 0.85rem;
 }
 
-.vstup-sazby-banky,
-.vstup-poplatku-banky {
-  width: 70px;
-  padding: 0.2rem;
-  font-size: 0.75rem;
+/* Oprava standardních checkboxů */
+input[type="checkbox"] {
+  appearance: auto;
+  width: auto;
+  height: auto;
+  margin: 0 5px 0 0;
+  background-color: var(--input-background);
+  border-color: var(--border-color);
+  cursor: pointer;
+}
+
+/* Styling pro label s checkboxem */
+.moznosti-exportu label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .tlacitko-vypocet, .tlacitko-export, .tlacitko-ulozit {
@@ -326,35 +398,220 @@ input:checked + .posuvnik:before {
   background-color: var(--button-hover);
 }
 
+/* Responzivní úpravy pro různé velikosti obrazovek */
+@media (max-width: 992px) {
+  .mrizka-nastaveni-bank {
+    grid-template-columns: repeat(2, 1fr); /* 2 sloupce na střední obrazovky */
+  }
+}
+
 @media (max-width: 768px) {
   .parametry-mrizka {
     grid-template-columns: 1fr;
   }
   
-  .mrizka-vstupu, .mrizka-nastaveni-bank, .mrizka-vysledku {
+  .mrizka-vstupu, .mrizka-vysledku {
     grid-template-columns: 1fr;
   }
   
-  .nastaveni-banky {
-    flex-wrap: wrap;
+  .mrizka-nastaveni-bank {
+    grid-template-columns: 1fr; /* 1 sloupec na mobilní zařízení */
   }
-  
-  .nazev-banky {
-    width: 100%;
-    margin-bottom: 0.4rem;
-  }
+}
 
-  .sekce-ulozeni-verze,
-  .sekce-ulozene-verze {
-    padding: 0.4rem;
-  }
+/* Nové styly pro rozšířené funkce */
 
-  .seznam-verzi li {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+/* Hlavička sekce s tlačítkem */
+.sekce-hlavicka {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
 
-  .seznam-verzi button {
-    margin-top: 0.4rem;
-  }
+.tlacitko-rozsireni {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tlacitko-rozsireni:hover {
+  background-color: var(--button-hover);
+}
+
+/* Rozšířené informace o klientovi */
+.rozsirene-udaje-klienta {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* Souhrn fixace */
+.souhrn-fixace {
+  background-color: var(--card-background-dark);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.fixace-prehled {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.fixace-polozka {
+  display: flex;
+  flex-direction: column;
+}
+
+.fixace-polozka span {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  margin-bottom: 0.3rem;
+}
+
+.fixace-polozka strong {
+  font-size: 1.1rem;
+  color: var(--primary-color);
+}
+
+/* Vylepšení ukládání verzí */
+.ulozeni-verze-panel {
+  margin-bottom: 1.5rem;
+}
+
+.ulozeni-input-skupina {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pole-nazev-verze {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-size: 0.9rem;
+}
+
+.seznam-verzi {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.seznam-verzi li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+.seznam-verzi li:hover {
+  background-color: var(--card-background-dark);
+}
+
+.info-verze {
+  display: flex;
+  flex-direction: column;
+}
+
+.nazev-verze {
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.datum-verze {
+  font-size: 0.8rem;
+  color: #ccc;
+}
+
+.akce-verze {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tlacitko-nacist {
+  background-color: var(--button-color);
+  color: var(--text-color);
+  border: none;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tlacitko-odstranit {
+  background-color: #e74c3c;
+  color: var(--text-color);
+  border: none;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tlacitko-nacist:hover {
+  background-color: var(--button-hover);
+}
+
+.tlacitko-odstranit:hover {
+  background-color: #c0392b;
+}
+
+.zadne-verze {
+  color: #ccc;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Volby exportu */
+.moznosti-exportu {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.moznosti-exportu label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Doplňující informace v sekci výsledků */
+.sekce-vysledku .sekce-doplnujici-informace {
+  background-color: var(--card-background-dark);
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.sekce-vysledku .sekce-doplnujici-informace h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.sekce-vysledku .sekce-doplnujici-informace textarea {
+  background-color: var(--input-background);
+  color: var(--input-text);
+  border: 1px solid var(--border-color);
+  width: 100%;
+  min-height: 80px;
 }
