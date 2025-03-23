@@ -615,3 +615,87 @@ input[type="checkbox"] {
   width: 100%;
   min-height: 80px;
 }
+/* Styly pro pojištění */
+.banka-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* Checkbox pojištění přes celou šířku */
+.pojisteni-checkbox {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+}
+
+.pojisteni-checkbox .checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.pojisteni-checkbox input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Konfigurace pojištění ČS */
+.pojisteni-cs-konfigurace {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: var(--border-radius);
+  margin-top: 8px;
+}
+
+.pojisteni-radio-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+}
+
+/* Styl pro pojistný výpočet */
+.pojisteni-info {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: var(--border-radius);
+}
+
+.pojisteni-hodnota {
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-top: 5px;
+}
+
+/* Zvýraznění celkové splátky */
+.celkova-splatka {
+  color: #ff9800 !important;
+  font-weight: bold;
+}
+
+/* Úprava zobrazení pro tablety a mobily */
+@media (max-width: 992px) {
+  .banka-body {
+    grid-template-columns: 1fr;
+  }
+}

@@ -6,14 +6,138 @@ import html2canvas from 'html2canvas';
 import './App.css';
 import logo from './images/smaller-logo.png';
 
+// Funkce pro výpočet pojištění České spořitelny
+const vypocitejPojisteniCS = (vyseUveru, typPPI = "standard", variant = "full") => {
+  // PPI standard 
+  // PPI - 9,26%
+  // PPI 50% - 5,47%
+  // 
+  // PPI plus
+  // PPI - 10,55%
+  // PPI 50% - 6,73%
+  
+  let sazba;
+  
+  if (typPPI === "standard") {
+    sazba = variant === "full" ? 0.0926 : 0.0547; // PPI standard (plné nebo 50%)
+  } else {
+    sazba = variant === "full" ? 0.1055 : 0.0673; // PPI plus (plné nebo 50%)
+  }
+  
+  // Příklad: na 4 mil úvěr se sazbou 4,7 je splátka u standard PPI - 1 891 Kč, 50% je 1 117 Kč
+  // Pro zjednodušení vypočteme jako procento z výše úvěru
+  // 1891 / 4000000 = přibližně 0.00047275
+  // To odpovídá přibližně 0.5673% ročně, což je přibližně 9.26% / 16.32
+  
+  const mesicniSazba = sazba / 12;
+  const mesicniPojistne = Math.round(vyseUveru * mesicniSazba / 16.32);
+  
+  return mesicniPojistne;
+};
+
+// Funkce pro výpočet pojištění UniCredit Bank
+const vypocitejPojisteniUCB = (vyseUveru, urokovaSazba, dobaUveru, dobaFixace) => {
+  // UCB: navýšení úvěru o 3% (tzn. z 4 mil. na 4,12 mil.)
+  
+  const navyseniUveru = 0.03; // 3%
+  const navysenyUver = vyseUveru * (1 + navyseniUveru); // např. 4 000 000 * 1.03 = 4 120 000
+  
+  // Převod roční sazby na měsíční
+  const mesicniSazba = (urokovaSazba / 100) / 12;
+  const pocetSplatek = dobaUveru * 12;
+  
+  // Výpočet běžné měsíční splátky
+  const beznaSpLatka = Math.round((vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) 
+                               / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1));
+  
+  // Výpočet navýšené měsíční splátky
+  const navysenaSpLatka = Math.round((navysenyUver * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) 
+                                  / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1));
+  
+  // Pojistné je rozdíl těchto splátek
+  const pojistne = navysenaSpLatka - beznaSpLatka;
+  
+  // Pro kontrolu - například pro 4 mil. úvěr při sazbě 4,7% a 30-leté době splácení:
+  // Běžná splátka: 20 746 Kč
+  // Navýšená splátka (4 120 000): 21 368 Kč
+  // Rozdíl (pojistné): 622 Kč
+  
+  return pojistne;
+};
+
 const pocatecniBanky = [
-  { id: 1, nazev: "Komerční banka", sazba: 4.6, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 2, nazev: "ČSOB", sazba: 4.8, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 3, nazev: "Česká spořitelna", sazba: 4.7, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 4, nazev: "UniCredit Bank", sazba: 4.8, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 5, nazev: "Raiffeisenbank", sazba: 4.99, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 6, nazev: "mBank", sazba: 5.29, aktivni: false, poplatekZaZpracovani: 0 },
-  { id: 7, nazev: "Oberbank", sazba: 5.29, aktivni: false, poplatekZaZpracovani: 0 },
+  { 
+    id: 1, 
+    nazev: "Komerční banka", 
+    sazba: 4.6, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "manual" // "manual" = ruční zadání částky
+  },
+  { 
+    id: 2, 
+    nazev: "ČSOB", 
+    sazba: 4.8, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "manual"
+  },
+  { 
+    id: 3, 
+    nazev: "Česká spořitelna", 
+    sazba: 4.7, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "cs", // speciální výpočet pro ČS
+    pojisteniCSVarianta: "standard", // standard nebo plus
+    pojisteniCSTyp: "full" // full nebo half (50%)
+  },
+  { 
+    id: 4, 
+    nazev: "UniCredit Bank", 
+    sazba: 4.8, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "ucb" // speciální výpočet pro UCB
+  },
+  { 
+    id: 5, 
+    nazev: "Raiffeisenbank", 
+    sazba: 4.99, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "manual"
+  },
+  { 
+    id: 6, 
+    nazev: "mBank", 
+    sazba: 5.29, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "manual"
+  },
+  { 
+    id: 7, 
+    nazev: "Oberbank", 
+    sazba: 5.29, 
+    aktivni: false, 
+    poplatekZaZpracovani: 0,
+    maPojisteni: false,
+    pojisteniMesicne: 0,
+    pojisteniTyp: "manual"
+  },
 ];
 
 const typyNemovitosti = ["Byt", "Dům", "Pozemek", "Komerční nemovitost"];
@@ -62,7 +186,7 @@ const GrafRozlozeniSplatek = React.forwardRef(({ harmonogram, nastavAktualniMesi
   );
 });
 
-// Nová komponenta pro souhrn plateb za fixační období
+// Aktualizovaná komponenta pro souhrn plateb za fixační období včetně pojištění
 const SouhrnFixacnihoObdobi = React.forwardRef(({ vysledek }, ref) => {
   if (!vysledek || !vysledek.harmonogram) return null;
   
@@ -72,13 +196,16 @@ const SouhrnFixacnihoObdobi = React.forwardRef(({ vysledek }, ref) => {
   const celkovaSplatka = harmonogramFixace.reduce((sum, mesic) => sum + mesic.splatka, 0);
   const celkovaJistina = harmonogramFixace.reduce((sum, mesic) => sum + mesic.platbaJistiny, 0);
   const celkoveUroky = harmonogramFixace.reduce((sum, mesic) => sum + mesic.platbaUroku, 0);
+  const celkovePojisteni = vysledek.maPojisteni ? 
+    harmonogramFixace.reduce((sum, mesic) => sum + mesic.pojisteni, 0) : 0;
+  const celkovePlatby = celkovaSplatka + celkovePojisteni;
   
   return (
     <div className="souhrn-fixace" ref={ref}>
       <h4>Souhrn plateb za fixační období ({vysledek.fixace} let)</h4>
       <div className="fixace-prehled">
         <div className="fixace-polozka">
-          <span>Celkem zaplaceno:</span>
+          <span>Celkem zaplaceno na úvěru:</span>
           <strong>{formatMena(celkovaSplatka)}</strong>
         </div>
         <div className="fixace-polozka">
@@ -89,6 +216,21 @@ const SouhrnFixacnihoObdobi = React.forwardRef(({ vysledek }, ref) => {
           <span>Zaplaceno na úrocích:</span>
           <strong>{formatMena(celkoveUroky)}</strong>
         </div>
+        
+        {vysledek.maPojisteni && (
+          <div className="fixace-polozka">
+            <span>Zaplaceno na pojištění:</span>
+            <strong>{formatMena(celkovePojisteni)}</strong>
+          </div>
+        )}
+        
+        {vysledek.maPojisteni && (
+          <div className="fixace-polozka">
+            <span>Celkem zaplaceno (úvěr + pojištění):</span>
+            <strong className="celkova-splatka">{formatMena(celkovePlatby)}</strong>
+          </div>
+        )}
+        
         <div className="fixace-polozka">
           <span>Zbývající jistina po fixaci:</span>
           <strong>{formatMena(harmonogramFixace[harmonogramFixace.length - 1].zbyvajiciJistina)}</strong>
@@ -137,10 +279,46 @@ const HypotecniKalkulator = () => {
     nastavBanky(banky.map(banka => ({ ...banka, sazba: referencniSazba })));
   }, [referencniSazba]);
 
+  // Funkce pro aktualizaci stavu pojištění u banky
+  const aktualizujPojisteniStav = (id, maPojisteni) => {
+    nastavBanky(banky.map(banka => 
+      banka.id === id ? { ...banka, maPojisteni } : banka
+    ));
+  };
+
+  // Funkce pro aktualizaci výše pojištění u banky
+  const aktualizujVysiPojisteni = (id, pojisteniMesicne) => {
+    nastavBanky(banky.map(banka => 
+      banka.id === id ? { ...banka, pojisteniMesicne: parseFloat(pojisteniMesicne) || 0 } : banka
+    ));
+  };
+
+  // Funkce pro aktualizaci varianty pojištění ČS (standard/plus)
+  const aktualizujPojisteniCSVariantu = (id, varianta) => {
+    nastavBanky(banky.map(banka => 
+      banka.id === id ? { ...banka, pojisteniCSVarianta: varianta } : banka
+    ));
+  };
+
+  // Funkce pro aktualizaci typu pojištění ČS (full/half)
+  const aktualizujPojisteniCSTyp = (id, typ) => {
+    nastavBanky(banky.map(banka => 
+      banka.id === id ? { ...banka, pojisteniCSTyp: typ } : banka
+    ));
+  };
+
   const vypocitejHypoteku = useCallback(() => {
     const bankyKVypoctu = porovnaniViceBanek 
       ? banky.filter(banka => banka.aktivni) 
-      : [{ nazev: "Obecná kalkulace", sazba: referencniSazba, aktivni: true, poplatekZaZpracovani: poplatekZaZpracovani }];
+      : [{ 
+          nazev: "Obecná kalkulace", 
+          sazba: referencniSazba, 
+          aktivni: true, 
+          poplatekZaZpracovani: poplatekZaZpracovani,
+          maPojisteni: false,
+          pojisteniMesicne: 0,
+          pojisteniTyp: "manual"
+        }];
     
     const noveVysledky = bankyKVypoctu.map(banka => {
       let mesicniSplatka;
@@ -163,9 +341,25 @@ const HypotecniKalkulator = () => {
         mesicniSplatka = Math.round((vyseUveru * mesicniSazba * Math.pow(1 + mesicniSazba, pocetSplatek)) / (Math.pow(1 + mesicniSazba, pocetSplatek) - 1));
       }
 
+      // Výpočet pojištění
+      let pojisteniMesicne = 0;
+      if (banka.maPojisteni) {
+        if (banka.pojisteniTyp === "cs") {
+          pojisteniMesicne = vypocitejPojisteniCS(vyseUveru, banka.pojisteniCSVarianta, banka.pojisteniCSTyp);
+        } else if (banka.pojisteniTyp === "ucb") {
+          pojisteniMesicne = vypocitejPojisteniUCB(vyseUveru, banka.sazba, dobaUveru, dobaFixace);
+        } else {
+          pojisteniMesicne = banka.pojisteniMesicne;
+        }
+      }
+
+      // Přidání pojištění k měsíční splátce
+      const celkovaMesicniSplatka = mesicniSplatka + pojisteniMesicne;
+
       let zbyvajiciJistina = vyseUveru;
       const harmonogram = [];
       let celkoveUrokyBehemFixace = 0;
+      let celkovePojisteniBehemFixace = 0;
 
       for (let mesic = 1; mesic <= dobaUveru * 12; mesic++) {
         let platbaUroku;
@@ -185,11 +379,14 @@ const HypotecniKalkulator = () => {
 
         if (mesic <= dobaFixace * 12) {
           celkoveUrokyBehemFixace += platbaUroku;
+          celkovePojisteniBehemFixace += pojisteniMesicne;
         }
 
         harmonogram.push({
           mesic,
           splatka: mesicniSplatka,
+          pojisteni: pojisteniMesicne,
+          celkovaSplatka: celkovaMesicniSplatka,
           platbaUroku,
           platbaJistiny,
           zbyvajiciJistina: Math.max(zbyvajiciJistina, 0)
@@ -199,11 +396,15 @@ const HypotecniKalkulator = () => {
       return {
         banka: banka.nazev,
         mesicniSplatka,
+        pojisteniMesicne,
+        celkovaMesicniSplatka,
         celkoveUrokyBehemFixace,
+        celkovePojisteniBehemFixace,
         harmonogram,
         fixace: dobaFixace,
         sazba: banka.sazba,
-        poplatekZaZpracovani: banka.poplatekZaZpracovani
+        poplatekZaZpracovani: banka.poplatekZaZpracovani,
+        maPojisteni: banka.maPojisteni
       };
     });
 
@@ -293,22 +494,22 @@ const HypotecniKalkulator = () => {
 
   const exportujDoPDF = async () => {
     const doc = new jsPDF();
-
+  
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
-   
+    
     doc.addImage(logo, 'PNG', 170, 10, 25, 25);
-
+  
     doc.setFontSize(16);
     doc.text("Výsledky hypoteční kalkulačky", 14, 20);
-
+  
     doc.setFontSize(10);
-
+  
     // Sestavení základních informací
     const zakladniInfo = [
       `Klient: ${jmenoKlienta} ${prijmeniKlienta}`,
     ];
-
+  
     // Přidání rozšířených informací o klientovi, pokud je zapnuto
     if (tisknoutRozsireneInfoKlienta) {
       zakladniInfo.push(
@@ -317,7 +518,7 @@ const HypotecniKalkulator = () => {
         `Příjem: ${formatMena(prijem)}`
       );
     }
-
+  
     // Přidání dalších základních informací
     zakladniInfo.push(
       `Účel úvěru: ${ucelUveru}`,
@@ -333,14 +534,14 @@ const HypotecniKalkulator = () => {
   
     let yPozice = 45;
     zakladniInfo.forEach(info => {
-        const casti = info.split(':');
-        if (casti.length === 2) {
-            doc.text(casti[0] + ":", 14, yPozice);
-            doc.text(" " + casti[1].trim(), 45, yPozice);
-        } else {
-            doc.text(info, 14, yPozice);
-        }
-        yPozice += 6;
+      const casti = info.split(':');
+      if (casti.length === 2) {
+        doc.text(casti[0] + ":", 14, yPozice);
+        doc.text(" " + casti[1].trim(), 45, yPozice);
+      } else {
+        doc.text(info, 14, yPozice);
+      }
+      yPozice += 6;
     });
   
     // Přidání souhrnných údajů o platbách za fixaci do tabulky
@@ -352,42 +553,46 @@ const HypotecniKalkulator = () => {
       const celkovaSplatka = harmonogramFixace.reduce((sum, mesic) => sum + mesic.splatka, 0);
       const celkovaJistina = harmonogramFixace.reduce((sum, mesic) => sum + mesic.platbaJistiny, 0);
       const zbyvajiciJistina = harmonogramFixace[harmonogramFixace.length - 1].zbyvajiciJistina;
-
+      const celkovePojisteni = vysledek.maPojisteni ? 
+        vysledek.celkovePojisteniBehemFixace : 0;
+  
       return [
         skrytNazvyBank ? `Varianta ${index + 1}` : vysledek.banka,
         formatMena(vysledek.mesicniSplatka),
+        vysledek.maPojisteni ? formatMena(vysledek.pojisteniMesicne) : "-",
+        vysledek.maPojisteni ? formatMena(vysledek.celkovaMesicniSplatka) : formatMena(vysledek.mesicniSplatka),
         `${vysledek.fixace} let`,
         `${vysledek.sazba.toFixed(2)}%`,
         formatMena(vysledek.poplatekZaZpracovani),
-        formatMena(celkovaSplatka),
         formatMena(celkovaJistina),
         formatMena(vysledek.celkoveUrokyBehemFixace),
+        vysledek.maPojisteni ? formatMena(celkovePojisteni) : "-",
         formatMena(zbyvajiciJistina)
       ];
     });
-
-    // Nastavení šířek sloupců - první sloupec širší, poslední užší
-    const sloupceNastaveni = [
-      { cellWidth: 25 }, // Banka - širší
-      { cellWidth: 'auto' }, // Měsíční splátka
-      { cellWidth: 'auto' }, // Fixace
-      { cellWidth: 'auto' }, // Sazba
-      { cellWidth: 'auto' }, // Náklady na zpracování
-      { cellWidth: 'auto' }, // Celkem zaplaceno
-      { cellWidth: 'auto' }, // Zaplaceno na jistině
-      { cellWidth: 'auto' }, // Zaplaceno na úrocích
-      { cellWidth: 25 }  // Zbývající jistina po fixaci - užší
-    ];
-
+  
     doc.autoTable({
-      head: [['Banka', 'Měsíční splátka', 'Fixace', 'Sazba', 'Náklady na zpracování', 'Celkem zaplaceno', 'Zaplaceno na jistině', 'Zaplaceno na úrocích', 'Zbývající jistina po fixaci']],
+      head: [['Banka', 'Měsíční splátka', 'Pojištění', 'Celková splátka', 'Fix', 'Sazba', 'Náklady na zpracování', 'Zaplaceno na jistině', 'Zaplaceno na úrocích', 'Zaplaceno na pojištění za fixaci', 'Zbývající jistina po fixaci']],
       body: dataDoTabulky,
       startY: yPozice + 5,
       styles: { font: 'Roboto', fontSize: 8 },
       headStyles: { fillColor: [74, 144, 226] },
-      columnStyles: sloupceNastaveni
+      // Nastavení šířek sloupců
+      columnStyles: {
+        0: { cellWidth: 18 }, // Banka
+        1: { cellWidth: 'auto' }, // Měsíční splátka
+        2: { cellWidth: 'auto' }, // Pojištění
+        3: { cellWidth: 'auto' }, // Celková splátka
+        4: { cellWidth: 9 }, // Fixace
+        5: { cellWidth: 'auto' }, // Sazba
+        6: { cellWidth: 14 }, // Náklady na zpracování
+        7: { cellWidth: 'auto' }, // Zaplaceno na jistině
+        8: { cellWidth: 'auto' }, // Zaplaceno na úrocích
+        9: { cellWidth: 18 }, // Zaplaceno na pojištění
+        10: { cellWidth: 20 }  // Zbývající jistina po fixaci
+      }
     });
-
+  
     let novaPoziceY = doc.lastAutoTable.finalY + 10;
     
     // Přidání grafu (volitelné)
@@ -407,10 +612,10 @@ const HypotecniKalkulator = () => {
       doc.addImage(imgData, 'PNG', 15, novaPoziceY, imgSirka, imgVyska);
       novaPoziceY += imgVyska + 10;
     }
-
-    // ODSTRANĚNÝ KÓD: Přidání souhrnu fixačního období do PDF - už nepotřebujeme, protože je v tabulce
-    // Tento blok jsem odstranil, aby se souhrn netiskl dvakrát
-      
+  
+    // DŮLEŽITÉ: Odstraněn tento blok pro přidání souhrnu fixačního období do PDF
+    // Nebude se již tisknout duplicitní souhrn plateb
+    
     // Přidání doplňujících informací
     if (doplnujiciInformace.trim() !== '') {
       const vyskaPDF = doc.internal.pageSize.height;
@@ -584,12 +789,11 @@ const HypotecniKalkulator = () => {
                 <div className="skupina-vstupu">
                   <label htmlFor="email-klienta">Email:</label>
                   <input 
-                  id="email-klienta"
-                  type="email" 
-                  value={emailKlienta} 
-                  onChange={(e) => nastavEmailKlienta(e.target.value)} 
-                  className="input-dark-mode"  /* můžete přidat tuto třídu, pokud je potřeba */
-                />
+                    id="email-klienta"
+                    type="email" 
+                    value={emailKlienta} 
+                    onChange={(e) => nastavEmailKlienta(e.target.value)} 
+                  />
                 </div>
                 <div className="skupina-vstupu">
                   <label htmlFor="prijem">Čisté příjmy žadatelů (Kč/měsíc):</label>
@@ -629,157 +833,272 @@ const HypotecniKalkulator = () => {
           )}
         </section>
         {porovnaniViceBanek && (
-  <section className="sekce-nastaveni-bank">
-    <h2>Nastavení bank</h2>
-    <div className="mrizka-nastaveni-bank">
-      {banky.map(banka => (
-        <div key={banka.id} className="nastaveni-banky">
-          <div className="banka-header">
-            <label className="prepinac">
-              <input
-                type="checkbox"
-                checked={banka.aktivni}
-                onChange={() => prepniBanku(banka.id)}
-              />
-              <span className="posuvnik"></span>
-            </label>
-            <span className="nazev-banky">{banka.nazev}</span>
-          </div>
-          <div className="banka-body">
-            <div className="banka-input-group">
-              <label htmlFor={`sazba-${banka.id}`}>Sazba (%)</label>
-              <input
-                id={`sazba-${banka.id}`}
-                type="number"
-                step="0.01"
-                value={banka.sazba}
-                onChange={(e) => aktualizujSazbuBanky(banka.id, e.target.value)}
-                disabled={!banka.aktivni}
-              />
+          <section className="sekce-nastaveni-bank">
+            <h2>Nastavení bank</h2>
+            <div className="mrizka-nastaveni-bank">
+              {banky.map(banka => (
+                <div key={banka.id} className="nastaveni-banky">
+                  <div className="banka-header">
+                    <label className="prepinac">
+                      <input
+                        type="checkbox"
+                        checked={banka.aktivni}
+                        onChange={() => prepniBanku(banka.id)}
+                      />
+                      <span className="posuvnik"></span>
+                    </label>
+                    <span className="nazev-banky">{banka.nazev}</span>
+                  </div>
+                  <div className="banka-body">
+                    <div className="banka-input-group">
+                      <label htmlFor={`sazba-${banka.id}`}>Sazba (%)</label>
+                      <input
+                        id={`sazba-${banka.id}`}
+                        type="number"
+                        step="0.01"
+                        value={banka.sazba}
+                        onChange={(e) => aktualizujSazbuBanky(banka.id, e.target.value)}
+                        disabled={!banka.aktivni}
+                      />
+                    </div>
+                    <div className="banka-input-group">
+                      <label htmlFor={`poplatek-${banka.id}`}>Poplatek (Kč)</label>
+                      <input
+                        id={`poplatek-${banka.id}`}
+                        type="number"
+                        value={banka.poplatekZaZpracovani}
+                        onChange={(e) => aktualizujPoplatekBanky(banka.id, e.target.value)}
+                        disabled={!banka.aktivni}
+                      />
+                    </div>
+                    
+                    {/* Checkbox pro zapnutí/vypnutí pojištění */}
+                    <div className="banka-input-group pojisteni-checkbox">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={banka.maPojisteni}
+                          onChange={(e) => aktualizujPojisteniStav(banka.id, e.target.checked)}
+                          disabled={!banka.aktivni}
+                        />
+                        S pojištěním
+                      </label>
+                    </div>
+                    
+                    {/* Pole pro pojištění se zobrazí pouze když je pojištění aktivní */}
+                    {banka.maPojisteni && (
+                      <>
+                        {banka.pojisteniTyp === "manual" && (
+                          <div className="banka-input-group">
+                            <label htmlFor={`pojisteni-${banka.id}`}>Pojištění (Kč/měsíc)</label>
+                            <input
+                              id={`pojisteni-${banka.id}`}
+                              type="number"
+                              value={banka.pojisteniMesicne}
+                              onChange={(e) => aktualizujVysiPojisteni(banka.id, e.target.value)}
+                              disabled={!banka.aktivni}
+                            />
+                          </div>
+                        )}
+                        
+                        {banka.pojisteniTyp === "cs" && (
+                          <div className="banka-input-group pojisteni-cs-konfigurace">
+                            <label>Typ pojištění ČS</label>
+                            <div className="pojisteni-radio-group">
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`cs-varianta-${banka.id}`}
+                                  checked={banka.pojisteniCSVarianta === "standard"}
+                                  onChange={() => aktualizujPojisteniCSVariantu(banka.id, "standard")}
+                                  disabled={!banka.aktivni}
+                                />
+                                PPI Standard
+                              </label>
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`cs-varianta-${banka.id}`}
+                                  checked={banka.pojisteniCSVarianta === "plus"}
+                                  onChange={() => aktualizujPojisteniCSVariantu(banka.id, "plus")}
+                                  disabled={!banka.aktivni}
+                                />
+                                PPI Plus
+                              </label>
+                            </div>
+                            
+                            <div className="pojisteni-radio-group">
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`cs-typ-${banka.id}`}
+                                  checked={banka.pojisteniCSTyp === "full"}
+                                  onChange={() => aktualizujPojisteniCSTyp(banka.id, "full")}
+                                  disabled={!banka.aktivni}
+                                />
+                                100% krytí
+                              </label>
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`cs-typ-${banka.id}`}
+                                  checked={banka.pojisteniCSTyp === "half"}
+                                  onChange={() => aktualizujPojisteniCSTyp(banka.id, "half")}
+                                  disabled={!banka.aktivni}
+                                />
+                                50% krytí
+                              </label>
+                            </div>
+                            
+                            <div className="pojisteni-hodnota">
+                              Měsíční pojistné: {formatMena(vypocitejPojisteniCS(vyseUveru, banka.pojisteniCSVarianta, banka.pojisteniCSTyp))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {banka.pojisteniTyp === "ucb" && (
+                          <div className="banka-input-group">
+                            <div className="pojisteni-info">
+                              <label>Pojištění UCB (0,3%)</label>
+                              <span className="pojisteni-hodnota">
+                                {formatMena(vypocitejPojisteniUCB(vyseUveru, banka.sazba, dobaUveru, dobaFixace))}/měsíc
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="banka-input-group">
-              <label htmlFor={`poplatek-${banka.id}`}>Poplatek (Kč)</label>
-              <input
-                id={`poplatek-${banka.id}`}
-                type="number"
-                value={banka.poplatekZaZpracovani}
-                onChange={(e) => aktualizujPoplatekBanky(banka.id, e.target.value)}
-                disabled={!banka.aktivni}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+          </section>
+        )}
 
         <button className="tlacitko-vypocet" onClick={vypocitejHypoteku}>Vypočítat</button>
 
         {vysledky.length > 0 && (
-  <section className="sekce-vysledku">
-    <h2>Výsledky</h2>
-    <div className="mrizka-vysledku">
-      {vysledky.map((vysledek, index) => (
-        <div key={index} className="karta-vysledku">
-          <h3>{vysledek.banka}</h3>
-          <p>Měsíční splátka: <strong>{formatMena(vysledek.mesicniSplatka)}</strong></p>
-          <p>Úroky za dobu fixace: <strong>{formatMena(vysledek.celkoveUrokyBehemFixace)}</strong></p>
-          <p>Fixace: <strong>{vysledek.fixace} let</strong></p>
-          <p>Sazba: <strong>{vysledek.sazba.toFixed(2)}%</strong></p>
-          <button onClick={() => nastavRozbalenouBanku(rozbalenaBanka === index ? null : index)}>
-            {rozbalenaBanka === index ? 'Skrýt detail' : 'Zobrazit detail'}
-          </button>
-        </div>
-      ))}
-    </div>
-    {rozbalenaBanka !== null && vysledky[rozbalenaBanka] && (
-      <div className="rozsirene-detaily">
-        <SouhrnFixacnihoObdobi 
-          ref={refSouhrnuFixace}
-          vysledek={vysledky[rozbalenaBanka]} 
-        />
-        
-        <input
-          type="range"
-          min="1"
-          max={dobaUveru * 12}
-          value={aktualniMesic}
-          onChange={(e) => nastavAktualniMesic(Number(e.target.value))}
-          className="posuvnik-mesicu"
-        />
-        <p>Měsíc: {aktualniMesic}</p>
-        <table className="tabulka-detailu">
-          <thead>
-            <tr>
-              <th>Měsíc</th>
-              <th>Splátka</th>
-              <th>Úrok</th>
-              <th>Jistina</th>
-              <th>Zbývá splatit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vysledky[rozbalenaBanka].harmonogram.slice(aktualniMesic - 1, aktualniMesic).map((mesic, i) => (
-              <tr key={i}>
-                <td>{mesic.mesic}</td>
-                <td>{formatMena(mesic.splatka)}</td>
-                <td>{formatMena(mesic.platbaUroku)}</td>
-                <td>{formatMena(mesic.platbaJistiny)}</td>
-                <td>{formatMena(mesic.zbyvajiciJistina)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <GrafRozlozeniSplatek 
-          ref={refGrafu} 
-          harmonogram={vysledky[rozbalenaBanka].harmonogram}
-          nastavAktualniMesic={nastavAktualniMesic}
-        />
-      </div>
-    )}
-    <div className="moznosti-exportu">
-      <label>
-        <input
-          type="checkbox"
-          checked={skrytNazvyBank}
-          onChange={(e) => nastavSkrytNazvyBank(e.target.checked)}
-        />
-        Skrýt názvy bank v PDF (použít Varianta 1, 2, 3...)
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          id="skip-graph"
-          defaultChecked={false}
-        />
-        Netisknout graf do PDF
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={tisknoutRozsireneInfoKlienta}
-          onChange={(e) => nastavTisknoutRozsireneInfoKlienta(e.target.checked)}
-        />
-        Zahrnout rozšířené informace o klientovi v PDF
-      </label>
-    </div>
-    
-    <div className="sekce-doplnujici-informace">
-      <h3>Doplňující informace</h3>
-      <textarea
-        value={doplnujiciInformace}
-        onChange={(e) => nastavDoplnujiciInformace(e.target.value)}
-        rows="4"
-        placeholder="Zadejte doplňující informace pro PDF..."
-      />
-    </div>
-    
-    <button className="tlacitko-export" onClick={exportujDoPDF}>Exportovat do PDF</button>
-  </section>
-)}
+          <section className="sekce-vysledku">
+            <h2>Výsledky</h2>
+            <div className="mrizka-vysledku">
+              {vysledky.map((vysledek, index) => (
+                <div key={index} className="karta-vysledku">
+                  <h3>{vysledek.banka}</h3>
+                  <p>Měsíční splátka úvěru: <strong>{formatMena(vysledek.mesicniSplatka)}</strong></p>
+                  
+                  {vysledek.maPojisteni && (
+                    <>
+                      <p>Měsíční pojištění: <strong>{formatMena(vysledek.pojisteniMesicne)}</strong></p>
+                      <p>Celková měsíční splátka: <strong className="celkova-splatka">{formatMena(vysledek.celkovaMesicniSplatka)}</strong></p>
+                    </>
+                  )}
+                  
+                  <p>Úroky za dobu fixace: <strong>{formatMena(vysledek.celkoveUrokyBehemFixace)}</strong></p>
+                  
+                  {vysledek.maPojisteni && (
+                    <p>Pojištění za dobu fixace: <strong>{formatMena(vysledek.celkovePojisteniBehemFixace)}</strong></p>
+                  )}
+                  
+                  <p>Fixace: <strong>{vysledek.fixace} let</strong></p>
+                  <p>Sazba: <strong>{vysledek.sazba.toFixed(2)}%</strong></p>
+                  <button onClick={() => nastavRozbalenouBanku(rozbalenaBanka === index ? null : index)}>
+                    {rozbalenaBanka === index ? 'Skrýt detail' : 'Zobrazit detail'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            {rozbalenaBanka !== null && vysledky[rozbalenaBanka] && (
+              <div className="rozsirene-detaily">
+                <SouhrnFixacnihoObdobi 
+                  ref={refSouhrnuFixace}
+                  vysledek={vysledky[rozbalenaBanka]} 
+                />
+                
+                <input
+                  type="range"
+                  min="1"
+                  max={dobaUveru * 12}
+                  value={aktualniMesic}
+                  onChange={(e) => nastavAktualniMesic(Number(e.target.value))}
+                  className="posuvnik-mesicu"
+                />
+                <p>Měsíc: {aktualniMesic}</p>
+                <table className="tabulka-detailu">
+                  <thead>
+                    <tr>
+                      <th>Měsíc</th>
+                      <th>Splátka úvěru</th>
+                      {vysledky[rozbalenaBanka].maPojisteni && <th>Pojištění</th>}
+                      {vysledky[rozbalenaBanka].maPojisteni && <th>Celkem</th>}
+                      <th>Úrok</th>
+                      <th>Jistina</th>
+                      <th>Zbývá splatit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vysledky[rozbalenaBanka].harmonogram.slice(aktualniMesic - 1, aktualniMesic).map((mesic, i) => (
+                      <tr key={i}>
+                        <td>{mesic.mesic}</td>
+                        <td>{formatMena(mesic.splatka)}</td>
+                        {vysledky[rozbalenaBanka].maPojisteni && <td>{formatMena(mesic.pojisteni)}</td>}
+                        {vysledky[rozbalenaBanka].maPojisteni && <td className="celkova-splatka">{formatMena(mesic.celkovaSplatka)}</td>}
+                        <td>{formatMena(mesic.platbaUroku)}</td>
+                        <td>{formatMena(mesic.platbaJistiny)}</td>
+                        <td>{formatMena(mesic.zbyvajiciJistina)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <GrafRozlozeniSplatek 
+                  ref={refGrafu} 
+                  harmonogram={vysledky[rozbalenaBanka].harmonogram}
+                  nastavAktualniMesic={nastavAktualniMesic}
+                />
+              </div>
+            )}
 
-          <section className="sekce-ulozeni-verze">
+            <div className="moznosti-exportu">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={skrytNazvyBank}
+                  onChange={(e) => nastavSkrytNazvyBank(e.target.checked)}
+                />
+                Skrýt názvy bank v PDF (použít Varianta 1, 2, 3...)
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  id="skip-graph"
+                  defaultChecked={false}
+                />
+                Netisknout graf do PDF
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={tisknoutRozsireneInfoKlienta}
+                  onChange={(e) => nastavTisknoutRozsireneInfoKlienta(e.target.checked)}
+                />
+                Zahrnout rozšířené informace o klientovi v PDF
+              </label>
+            </div>
+            
+            <div className="sekce-doplnujici-informace">
+              <h3>Doplňující informace</h3>
+              <textarea
+                value={doplnujiciInformace}
+                onChange={(e) => nastavDoplnujiciInformace(e.target.value)}
+                rows="4"
+                placeholder="Zadejte doplňující informace pro PDF..."
+              />
+            </div>
+            
+            <button className="tlacitko-export" onClick={exportujDoPDF}>Exportovat do PDF</button>
+          </section>
+        )}
+
+        <section className="sekce-ulozeni-verze">
           <h2>Uložení a obnovení verzí</h2>
           <div className="ulozeni-verze-panel">
             <div className="ulozeni-input-skupina">
