@@ -107,7 +107,7 @@ const pocatecniBanky = [
     poplatekZaZpracovani: 0,
     maPojisteni: false,
     pojisteniMesicne: 0,
-    pojisteniTyp: "ucb" // speciální výpočet pro UCB
+    pojisteniTyp: "manual"
   },
   { 
     id: 5, 
