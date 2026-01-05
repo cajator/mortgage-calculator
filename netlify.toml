@@ -1,0 +1,10 @@
+[build]
+  # Standardní nastavení pro React/moderní weby
+  publish = "build"
+  command = "npm run build"
+
+[build.environment]
+  # Tady natvrdo nastavíme verzi, kterou Netlify chce
+  NODE_VERSION = "22"
+  # Pojistka pro NPM (pokud nepoužíváš Yarn)
+  NPM_FLAGS = "--no-audit"
